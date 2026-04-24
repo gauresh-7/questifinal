@@ -67,7 +67,12 @@ export default function Index() {
           <View style={localStyles.mainBodyRow}>
             <View style={localStyles.glassAvatarWrapper}>
               <View style={localStyles.avatarInner}>
-                  <Text style={localStyles.placeholderText}>INITIALIZING_SYSTEM...</Text>
+                  <Image 
+                    source={require('../assets/images/player_avatar.png')} 
+                    style={localStyles.avatarImage} 
+                    contentFit="cover" 
+                    contentPosition="right"
+                  />
               </View>
             </View>
 
@@ -160,9 +165,9 @@ const getStyles = (theme: 'dark' | 'light') => {
     progressBarFill: { height: '100%', backgroundColor: accent }, 
     progressText: { color: isLight ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: '800', marginTop: 10, textAlign: 'center' },
     mainBodyRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-    glassAvatarWrapper: { width: '58%', height: 320, backgroundColor: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.03)', borderRadius: 24, borderWidth: 1, borderColor: isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255, 255, 255, 0.1)' },
-    avatarInner: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    placeholderText: { color: isLight ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.15)', fontWeight: '900', fontSize: 10, letterSpacing: 4, transform: [{ rotate: '-90deg' }] },
+    glassAvatarWrapper: { width: '58%', aspectRatio: 1, backgroundColor: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.03)', borderRadius: 24, borderWidth: 1, borderColor: isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255, 255, 255, 0.1)', overflow: 'hidden' },
+    avatarInner: { flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' },
+    avatarImage: { width: '100%', height: '100%', borderRadius: 24 },
     buttonColumn: { width: '35%', gap: 20, alignItems: 'center' },
     actionButton: { alignItems: 'center', width: '100%' },
     glassIconCircle: { width: BUTTON_SIZE, height: BUTTON_SIZE, borderRadius: BUTTON_SIZE / 2, borderWidth: 1, borderColor: isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.2)', backgroundColor: isLight ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.07)', justifyContent: 'center', alignItems: 'center', marginBottom: 8 },

@@ -11,7 +11,7 @@ const { width, height } = Dimensions.get('window');
 const UserDetails = () => {
     const router = useRouter();
     const { navigateWithTransition } = useTransition();
-    const { user, level, currentXp, nextLevelXp, logout, theme } = useGameStore();
+    const { user, level, currentXp, nextLevelXp, theme } = useGameStore();
 
     const isLight = theme === 'light';
     const styles = getStyles(theme);
@@ -38,7 +38,12 @@ const UserDetails = () => {
             {/* 3. Liquid Glass Avatar Card */}
             <View style={styles.glassCard}>
                 <View style={styles.avatarInner}>
-                    <Text style={styles.placeholderText}>Avatar Preview</Text>
+                    <Image 
+                      source={require('../assets/images/player_avatar.png')} 
+                      style={styles.avatarImage} 
+                      contentFit="cover"
+                      contentPosition="right"
+                    />
                 </View>
             </View>
 
@@ -56,15 +61,6 @@ const UserDetails = () => {
                     </View>
                 ))}
 
-                <Pressable 
-                  style={styles.logoutButton}
-                  onPress={() => {
-                    logout();
-                    navigateWithTransition("/userAuth", "wipe");
-                  }}
-                >
-                  <Text style={styles.logoutText}>TERMINATE SESSION</Text>
-                </Pressable>
             </View>
             
             {/* 5. Frosted Bottom Nav */}
@@ -168,12 +164,12 @@ const getStyles = (theme: 'dark' | 'light') => {
             borderRadius: 23,
             justifyContent: 'center',
             alignItems: 'center',
+            overflow: 'hidden',
         },
-        placeholderText: {
-            color: isLight ? 'rgba(0,0,0,0.2)' : 'rgba(255, 255, 255, 0.15)',
-            fontWeight: '700',
-            fontSize: 10,
-            letterSpacing: 4,
+        avatarImage: {
+            width: '100%',
+            height: '100%',
+            borderRadius: 23,
         },
         detailsContainer: {
             width: '100%',
@@ -220,21 +216,6 @@ const getStyles = (theme: 'dark' | 'light') => {
             width: 24,
             height: 24,
             tintColor: isLight ? 'rgba(0,0,0,0.4)' : 'rgba(255, 255, 255, 0.3)',
-        },
-        logoutButton: {
-            marginTop: 20,
-            backgroundColor: isLight ? 'rgba(128, 0, 255, 0.1)' : 'rgba(255, 101, 0, 0.1)',
-            borderWidth: 1,
-            borderColor: isLight ? 'rgba(128, 0, 255, 0.5)' : 'rgba(255, 101, 0, 0.5)',
-            paddingVertical: 16,
-            borderRadius: 16,
-            alignItems: 'center',
-        },
-        logoutText: {
-            color: accent,
-            fontSize: 12,
-            fontWeight: '800',
-            letterSpacing: 2,
         },
     });
 };

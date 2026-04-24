@@ -47,6 +47,30 @@ router.post('/users', verifyToken, async (req, res) => {
   }
 });
 
+// GET all users
+router.get('/users', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM users');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST new user
+router.post('/users', async (req, res) => {
+  try {
+    const { uid, email, display_name } = req.body;
+    const result = await pool.query(
+      'INSERT INTO users (uid, email, display_name) VALUES ($1, $2, $3) RETURNING *',
+      [uid, email, display_name]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Update XP or level
 router.put('/users/xp', verifyToken, async (req, res) => {
   try {

@@ -18,8 +18,17 @@ app.get('/', (req, res) => {
   res.send('OJT Backend is running');
 });
 
+const taskRoutes = require('./routes/taskRoutes');
+app.use('/api', taskRoutes);
+
 const userRoutes = require('./routes/userRoutes');
 app.use('/api', userRoutes);
+
+const xpLogRoutes = require('./routes/xpLogRoutes');
+app.use('/api', xpLogRoutes);
+
+const inventoryRoutes = require('./routes/inventoryRoutes');
+app.use('/api', inventoryRoutes);
 
 
 // Error handler
@@ -43,3 +52,5 @@ app.get('/test-db', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+app.use(express.urlencoded({ extended: true }));

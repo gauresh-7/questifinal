@@ -1,5 +1,9 @@
-// Get all tasks
-app.get('/tasks', async (req, res) => {
+const express = require('express');
+const router = express.Router();
+const pool = require('../db'); // assuming you set up pg Pool in db.js
+
+// GET all tasks
+router.get('/tasks', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM tasks');
     res.json(result.rows);
@@ -8,16 +12,18 @@ app.get('/tasks', async (req, res) => {
   }
 });
 
-// Add a new task
-app.post('/tasks', async (req, res) => {
+// POST new task
+router.post('/tasks', async (req, res) => {
   try {
     const { title, xp_reward } = req.body;
-    await pool.query(
-      'INSERT INTO tasks (title, xp_reward) VALUES ($1, $2)',
+    const result = await pool.query(
+      'INSERT INTO tasks (title, xp_reward) VALUES ($1, $2) RETURNING *',
       [title, xp_reward]
     );
-    res.json({ message: 'Task added!' });
+    res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
+module.exports = router;

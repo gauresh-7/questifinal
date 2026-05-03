@@ -37,8 +37,6 @@ yarn-error.*
 *.tsbuildinfo
 
 # large audio/video assets
-*.wav
-*.mp3
 *.mp4
 *.mov
 
@@ -47,3 +45,13 @@ app-example
 # generated native folders
 /ios
 /android
+
+# Python backend
+backend/.env
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.db
+backend/*.db-shm
+backend/*.db-wal
+*serviceAccountKey*.json

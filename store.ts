@@ -1,5 +1,12 @@
 import { useSyncExternalStore } from 'react';
 
+// ─── Backend URL ───────────────────────────────────────────────────────────────
+// After deploying to Render, paste your service URL here (no trailing slash).
+// Example: 'https://questifinal-backend.onrender.com'
+const API_BASE_URL = 'https://YOUR_RENDER_SERVICE.onrender.com';
+// ──────────────────────────────────────────────────────────────────────────────
+
+
 export type TaskDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
 
 export interface Task {
@@ -15,6 +22,8 @@ export type Theme = 'dark' | 'light';
 
 interface User {
   username: string;
+  uid: string;
+  token: string;
 }
 
 interface GameState {
@@ -24,16 +33,19 @@ interface GameState {
   nextLevelXp: number;
   level: number;
   tasks: Task[];
+  lastWarmupDate: string | null;
 }
 
 interface GameActions {
-  login: (username: string) => void;
+  login: (username: string, uid: string, token: string) => void;
   logout: () => void;
   toggleTheme: () => void;
   addXp: (amount: number) => void;
   removeXp: (amount: number) => void;
   toggleTask: (id: number) => void;
   addTask: (taskName: string, difficulty: TaskDifficulty) => boolean;
+  addFocusXp: (minutes: number, difficulty: TaskDifficulty) => void;
+  checkAndRecordWarmup: () => boolean;
 }
 
 type GameStore = GameState & GameActions;
@@ -44,16 +56,8 @@ let state: GameState = {
   currentXp: 0,
   nextLevelXp: 1000,
   level: 1,
-  tasks: [
-    {
-      id: 1,
-      title: 'SYSTEM_CALIBRATION',
-      status: 'IN_PROGRESS',
-      progress: '65%',
-      priority: 'HARD',
-      xpValue: 150,
-    },
-  ],
+  tasks: [],
+  lastWarmupDate: null,
 };
 
 const listeners = new Set<() => void>();
@@ -102,8 +106,19 @@ const DIFFICULTY_XP: Record<TaskDifficulty, number> = {
 };
 
 const actions: GameActions = {
-  login: (username) => {
-    state = { ...state, user: { username } };
+  login: (username, uid, token) => {
+    state = { ...state, user: { username, uid, token } };
+    
+    // Attempt to sync with backend
+    fetch(`${API_BASE_URL}/users/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ display_name: username })
+    }).catch(err => console.log('Backend sync error:', err));
+    
     emit();
   },
 
@@ -158,6 +173,14 @@ const actions: GameActions = {
   addTask: (taskName, difficulty) => {
     if (taskName.trim().length === 0) return false;
 
+    // Task Limits
+    const limits: Record<TaskDifficulty, number> = { EASY: 5, MEDIUM: 3, HARD: 1 };
+    const activeTasksOfDifficulty = state.tasks.filter(t => t.priority === difficulty && t.status !== 'COMPLETED').length;
+    
+    if (activeTasksOfDifficulty >= limits[difficulty]) {
+      return false;
+    }
+
     const newTask: Task = {
       id: Date.now(),
       title: taskName.toUpperCase().replace(/\s+/g, '_'),
@@ -174,6 +197,23 @@ const actions: GameActions = {
 
     emit();
     return true;
+  },
+
+  addFocusXp: (minutes, difficulty) => {
+    const multipliers = { EASY: 1, MEDIUM: 2, HARD: 3 };
+    const xpEarned = minutes * multipliers[difficulty];
+    applyXpGain(xpEarned);
+    emit();
+  },
+
+  checkAndRecordWarmup: () => {
+    const today = new Date().toISOString().split('T')[0];
+    if (state.lastWarmupDate !== today) {
+      state = { ...state, lastWarmupDate: today };
+      emit();
+      return true;
+    }
+    return false;
   },
 };
 

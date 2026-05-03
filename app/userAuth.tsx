@@ -1,33 +1,62 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, Pressable, Dimensions, KeyboardAvoidingView, Platform, Animated } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Pressable, Dimensions, Platform, Animated, ActivityIndicator } from 'react-native';
 import { useGameStore } from '../store';
-import { useTransition } from './_layout';
+import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { auth } from '../firebaseConfig';
+import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 
 const { width, height } = Dimensions.get('window');
 
+// Configure Google Sign-In
+GoogleSignin.configure({
+  webClientId: '211357533398-seaqbouc0vmue2eg9i3oh2dql5geojco.apps.googleusercontent.com',
+});
+
 export default function UserAuth() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const { login, theme } = useGameStore();
-  const { navigateWithTransition } = useTransition();
+  const router = useRouter();
 
   const isLight = theme === 'light';
   const styles = getStyles(theme);
 
-  const handleLogin = () => {
-    if (username.trim().length > 0) {
-      login(username.trim());
-      // On success, go back to home screen
-      navigateWithTransition('/', 'zoom');
+  const handleLogin = async () => {
+    try {
+      setLoading(true);
+      setErrorMsg('');
+      
+      // 1. Trigger Google Sign-In
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      
+      // 2. Create Firebase Credential
+      if (!userInfo.data?.idToken) throw new Error("No ID Token found");
+      const credential = GoogleAuthProvider.credential(userInfo.data.idToken);
+      
+      // 3. Sign into Firebase
+      const userCredential = await signInWithCredential(auth, credential);
+      const user = userCredential.user;
+      
+      // 4. Get Firebase ID Token for our FastAPI backend
+      const firebaseToken = await user.getIdToken();
+      
+      // 5. Store in global state and go home
+      login(user.displayName || 'Player', user.uid, firebaseToken);
+      router.replace('/');
+      
+    } catch (error: any) {
+      console.error(error);
+      setErrorMsg(error.message || 'Authentication failed');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={styles.container}>
       <StatusBar style={isLight ? "dark" : "light"} />
 
       {/* Background Grid & Effects */}
@@ -49,50 +78,33 @@ export default function UserAuth() {
           <Text style={styles.heading}>INITIALIZE</Text>
         </View>
 
-        {/* Input Fields */}
+        {/* Action Container */}
         <View style={styles.formContainer}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>IDENTITY_TAG</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your alias"
-              placeholderTextColor={isLight ? "rgba(0, 0, 0, 0.3)" : "rgba(255, 255, 255, 0.2)"}
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-              autoCorrect={false}
-              selectionColor={isLight ? "#8000FF" : "#FF6500"}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>PASSCODE</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="••••••••"
-              placeholderTextColor={isLight ? "rgba(0, 0, 0, 0.3)" : "rgba(255, 255, 255, 0.2)"}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              selectionColor={isLight ? "#8000FF" : "#FF6500"}
-            />
-          </View>
+          <Text style={styles.inputLabel}>GOOGLE_OAUTH2</Text>
+          
+          {errorMsg ? (
+            <Text style={{color: 'red', marginBottom: 10, fontSize: 12}}>{errorMsg}</Text>
+          ) : null}
 
           {/* Login Button */}
           <Pressable 
             style={({ pressed }) => [
               styles.loginButton,
-              username.trim() ? styles.loginButtonActive : styles.loginButtonDisabled,
-              pressed && { transform: [{ scale: 0.98 }] }
+              styles.loginButtonActive,
+              pressed && { transform: [{ scale: 0.98 }] },
             ]}
             onPress={handleLogin}
-            disabled={!username.trim()}
+            disabled={loading}
           >
-            <Text style={styles.loginButtonText}>AUTHENTICATE</Text>
+            {loading ? (
+              <ActivityIndicator color="#FFF" />
+            ) : (
+              <Text style={styles.loginButtonText}>GOOGLE SIGN-IN</Text>
+            )}
           </Pressable>
         </View>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

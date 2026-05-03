@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "211357533398",
+    "project_id": "questifinal",
+    "storage_bucket": "questifinal.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:211357533398:android:f6d3f9d973738db03f7577",
+        "android_client_info": {
+          "package_name": "com.gygacantcode.Questify"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "211357533398-seaqbouc0vmue2eg9i3oh2dql5geojco.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_50ro0ynbyrsiKIt8LHlUU9jmw3Ad55Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "211357533398-seaqbouc0vmue2eg9i3oh2dql5geojco.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

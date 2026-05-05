@@ -3,7 +3,7 @@ import { useSyncExternalStore } from 'react';
 // ─── Backend URL ───────────────────────────────────────────────────────────────
 // After deploying to Render, paste your service URL here (no trailing slash).
 // Example: 'https://questifinal-backend.onrender.com'
-const API_BASE_URL = 'https://YOUR_RENDER_SERVICE.onrender.com';
+const API_BASE_URL = 'https://questifinal-backend-production.up.railway.app';
 // ──────────────────────────────────────────────────────────────────────────────
 
 

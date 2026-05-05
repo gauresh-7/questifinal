@@ -138,7 +138,7 @@ export default function Index() {
                       localStyles.actionButton,
                       pressed && { opacity: 0.7, transform: [{ scale: 0.96 }] }
                     ]}
-                    onPress={() => handlePress(label === 'Quests' ? "/tasks" : "/timer")}
+                    onPress={() => handlePress(label === 'Quests' ? "/(tabs)/tasks" : "/timer")}
                   >
                     {({ pressed, hovered }) => (
                       <>

@@ -1,18 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, Dimensions, Platform, Animated, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Dimensions, ActivityIndicator, Platform } from 'react-native';
 import { useGameStore } from '../store';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { auth } from '../firebaseConfig';
-import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithCredential, signInWithPopup } from 'firebase/auth';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 const { width, height } = Dimensions.get('window');
 
-// Configure Google Sign-In
-GoogleSignin.configure({
-  webClientId: '211357533398-seaqbouc0vmue2eg9i3oh2dql5geojco.apps.googleusercontent.com',
-});
+// Your Google OAuth Client IDs
+const WEB_CLIENT_ID = '211357533398-seaqbouc0vmue2eg9i3oh2dql5geojco.apps.googleusercontent.com';
+
+// Configure Google Sign-In for Native
+if (Platform.OS !== 'web') {
+  GoogleSignin.configure({
+    webClientId: WEB_CLIENT_ID,
+    offlineAccess: true,
+  });
+}
 
 export default function UserAuth() {
   const [loading, setLoading] = useState(false);
@@ -23,33 +29,45 @@ export default function UserAuth() {
   const isLight = theme === 'light';
   const styles = getStyles(theme);
 
-  const handleLogin = async () => {
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setErrorMsg('');
+
     try {
-      setLoading(true);
-      setErrorMsg('');
-      
-      // 1. Trigger Google Sign-In
-      await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-      
-      // 2. Create Firebase Credential
-      if (!userInfo.data?.idToken) throw new Error("No ID Token found");
-      const credential = GoogleAuthProvider.credential(userInfo.data.idToken);
-      
-      // 3. Sign into Firebase
-      const userCredential = await signInWithCredential(auth, credential);
-      const user = userCredential.user;
-      
-      // 4. Get Firebase ID Token for our FastAPI backend
-      const firebaseToken = await user.getIdToken();
-      
-      // 5. Store in global state and go home
-      login(user.displayName || 'Player', user.uid, firebaseToken);
-      router.replace('/');
-      
+      if (Platform.OS === 'web') {
+        // Web Flow
+        const provider = new GoogleAuthProvider();
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+        const firebaseToken = await user.getIdToken();
+        login(user.displayName || 'Player', user.uid, firebaseToken);
+        router.replace('/');
+      } else {
+        // Native Flow (Android/iOS)
+        await GoogleSignin.hasPlayServices();
+        const { data } = await GoogleSignin.signIn();
+        
+        if (data?.idToken) {
+          const credential = GoogleAuthProvider.credential(data.idToken);
+          const userCredential = await signInWithCredential(auth, credential);
+          const user = userCredential.user;
+          const firebaseToken = await user.getIdToken();
+          
+          login(user.displayName || 'Player', user.uid, firebaseToken);
+          router.replace('/');
+        } else {
+          throw new Error('No ID token received from Google');
+        }
+      }
     } catch (error: any) {
       console.error(error);
-      setErrorMsg(error.message || 'Authentication failed');
+      if (error.code === '7') {
+        setErrorMsg('Network error. Check your connection.');
+      } else if (error.code === '12501') {
+        setErrorMsg('Sign-in cancelled.');
+      } else {
+        setErrorMsg(error.message || 'Google Sign-In failed');
+      }
     } finally {
       setLoading(false);
     }
@@ -57,7 +75,7 @@ export default function UserAuth() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style={isLight ? "dark" : "light"} />
+      <StatusBar style={isLight ? 'dark' : 'light'} />
 
       {/* Background Grid & Effects */}
       <View style={styles.gridContainer} pointerEvents="none">
@@ -80,20 +98,20 @@ export default function UserAuth() {
 
         {/* Action Container */}
         <View style={styles.formContainer}>
-          <Text style={styles.inputLabel}>GOOGLE_OAUTH2</Text>
-          
+          <Text style={styles.inputLabel}>GOOGLE_NATIVE_AUTH</Text>
+
           {errorMsg ? (
-            <Text style={{color: 'red', marginBottom: 10, fontSize: 12}}>{errorMsg}</Text>
+            <Text style={{ color: 'red', marginBottom: 10, fontSize: 12 }}>{errorMsg}</Text>
           ) : null}
 
           {/* Login Button */}
-          <Pressable 
+          <Pressable
             style={({ pressed }) => [
               styles.loginButton,
               styles.loginButtonActive,
               pressed && { transform: [{ scale: 0.98 }] },
             ]}
-            onPress={handleLogin}
+            onPress={handleGoogleLogin}
             disabled={loading}
           >
             {loading ? (
@@ -185,25 +203,12 @@ const getStyles = (theme: 'dark' | 'light') => {
       borderWidth: 1,
       borderColor: isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)',
     },
-    inputGroup: {
-      marginBottom: 24,
-    },
     inputLabel: {
       color: isLight ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.5)',
       fontSize: 10,
       fontWeight: '800',
       letterSpacing: 2,
       marginBottom: 10,
-    },
-    input: {
-      backgroundColor: isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)',
-      height: 56,
-      borderRadius: 12,
-      paddingHorizontal: 16,
-      color: primaryText,
-      fontSize: 16,
-      borderWidth: 1,
-      borderColor: isLight ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)',
     },
     loginButton: {
       height: 56,
@@ -214,9 +219,6 @@ const getStyles = (theme: 'dark' | 'light') => {
     },
     loginButtonActive: {
       backgroundColor: accent,
-    },
-    loginButtonDisabled: {
-      backgroundColor: isLight ? 'rgba(128, 0, 255, 0.2)' : 'rgba(255, 101, 0, 0.2)',
     },
     loginButtonText: {
       color: '#FFFFFF',

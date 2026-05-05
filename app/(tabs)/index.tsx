@@ -53,7 +53,6 @@ export default function Index() {
     width: `${progressWidth.value}%`,
   }));
 
-  if (!user) return <Redirect href="/userAuth" />;
 
   const handlePress = (path: any) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

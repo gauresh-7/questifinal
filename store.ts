@@ -46,6 +46,7 @@ interface GameActions {
   addTask: (taskName: string, difficulty: TaskDifficulty) => boolean;
   addFocusXp: (minutes: number, difficulty: TaskDifficulty) => void;
   checkAndRecordWarmup: () => boolean;
+  updateUsername: (newUsername: string) => void;
 }
 
 type GameStore = GameState & GameActions;
@@ -214,6 +215,24 @@ const actions: GameActions = {
       return true;
     }
     return false;
+  },
+
+  updateUsername: (newUsername: string) => {
+    if (state.user) {
+      state = { ...state, user: { ...state.user, username: newUsername } };
+      
+      // Sync with backend
+      fetch(`${API_BASE_URL}/users/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${state.user.token}`
+        },
+        body: JSON.stringify({ display_name: newUsername })
+      }).catch(err => console.log('Backend sync error:', err));
+      
+      emit();
+    }
   },
 };
 

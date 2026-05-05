@@ -1,11 +1,13 @@
-import { Tabs } from 'expo-router';
+import { Tabs, Redirect } from 'expo-router';
 import { useGameStore } from '../../store';
 import { Image } from 'expo-image';
 import { Platform } from 'react-native';
 
 export default function TabLayout() {
-  const { theme } = useGameStore();
+  const { user, theme } = useGameStore();
   const isLight = theme === 'light';
+
+  if (!user) return <Redirect href="/userAuth" />;
 
   return (
     <Tabs

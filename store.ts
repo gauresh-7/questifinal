@@ -47,6 +47,7 @@ interface GameActions {
   addFocusXp: (minutes: number, difficulty: TaskDifficulty) => void;
   checkAndRecordWarmup: () => boolean;
   updateUsername: (newUsername: string) => void;
+  deleteTask: (id: number) => void;
 }
 
 type GameStore = GameState & GameActions;
@@ -233,6 +234,14 @@ const actions: GameActions = {
       
       emit();
     }
+  },
+
+  deleteTask: (id: number) => {
+    state = {
+      ...state,
+      tasks: state.tasks.filter((task) => task.id !== id),
+    };
+    emit();
   },
 };
 

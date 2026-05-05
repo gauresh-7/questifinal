@@ -19,7 +19,7 @@ import type { TaskDifficulty } from "../../store";
 
 export default function TasksScreen() {
   // Global State
-  const { currentXp, tasks, toggleTask, addTask, theme } = useGameStore();
+  const { currentXp, tasks, toggleTask, addTask, deleteTask, theme } = useGameStore();
   const isLight = theme === 'light';
   const accent = isLight ? '#8000FF' : '#FF6500';
   const localStyles = getStyles(theme);
@@ -122,14 +122,26 @@ export default function TasksScreen() {
                     ]}>{task.title}</Text>
                     <Text style={localStyles.xpRewardText}>+{task.xpValue} XP REWARD</Text>
                   </View>
-                  <View style={[
-                    localStyles.priorityBadge, 
-                    task.status === "COMPLETED" && { borderColor: '#00FF96' }
-                  ]}>
-                    <Text style={[
-                      localStyles.priorityText, 
-                      task.status === "COMPLETED" && { color: '#00FF96' }
-                    ]}>{task.status === "COMPLETED" ? "CLEARED" : task.priority}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <View style={[
+                      localStyles.priorityBadge, 
+                      task.status === "COMPLETED" && { borderColor: '#00FF96' }
+                    ]}>
+                      <Text style={[
+                        localStyles.priorityText, 
+                        task.status === "COMPLETED" && { color: '#00FF96' }
+                      ]}>{task.status === "COMPLETED" ? "CLEARED" : task.priority}</Text>
+                    </View>
+                    <Pressable 
+                      onPress={() => deleteTask(task.id)}
+                      hitSlop={10}
+                      style={({ pressed }) => [
+                        localStyles.deleteButton,
+                        pressed && { opacity: 0.6, transform: [{ scale: 0.9 }] }
+                      ]}
+                    >
+                      <Text style={localStyles.deleteButtonText}>✕</Text>
+                    </Pressable>
                   </View>
                 </View>
 
@@ -184,6 +196,22 @@ const getStyles = (theme: 'dark' | 'light') => {
     priorityBadge: { borderWidth: 1, borderColor: isLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
     priorityText: { color: isLight ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)', fontSize: 9, fontWeight: '900' },
     progressBarContainer: { height: 4, backgroundColor: isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' },
-    progressBarFill: { height: '100%', backgroundColor: accent }
+    progressBarFill: { height: '100%', backgroundColor: accent },
+    deleteButton: {
+      padding: 4,
+      backgroundColor: isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.08)',
+      borderRadius: 6,
+      width: 24,
+      height: 24,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)',
+    },
+    deleteButtonText: {
+      color: isLight ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.4)',
+      fontSize: 12,
+      fontWeight: '900',
+    }
   });
 };

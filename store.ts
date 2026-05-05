@@ -19,6 +19,7 @@ export interface Task {
 }
 
 export type Theme = 'dark' | 'light';
+export type AvatarType = 'KNIGHT' | 'WIZARD1' | 'WIZARD2' | 'WIZARD3';
 
 interface User {
   username: string;
@@ -34,6 +35,7 @@ interface GameState {
   level: number;
   tasks: Task[];
   lastWarmupDate: string | null;
+  avatarType: AvatarType;
 }
 
 interface GameActions {
@@ -48,6 +50,7 @@ interface GameActions {
   checkAndRecordWarmup: () => boolean;
   updateUsername: (newUsername: string) => void;
   deleteTask: (id: number) => void;
+  setAvatarType: (type: AvatarType) => void;
 }
 
 type GameStore = GameState & GameActions;
@@ -60,6 +63,7 @@ let state: GameState = {
   level: 1,
   tasks: [],
   lastWarmupDate: null,
+  avatarType: 'WIZARD1',
 };
 
 const listeners = new Set<() => void>();
@@ -79,11 +83,19 @@ const applyXpGain = (amount: number) => {
   const total = state.currentXp + amount;
 
   if (total >= state.nextLevelXp) {
+    const newLevel = state.level + 1;
+    let newAvatar = state.avatarType;
+    
+    // Auto-evolve Wizard path
+    if (newAvatar === 'WIZARD1' && newLevel >= 20) newAvatar = 'WIZARD2';
+    if (newAvatar === 'WIZARD2' && newLevel >= 60) newAvatar = 'WIZARD3';
+
     state = {
       ...state,
       currentXp: total - state.nextLevelXp,
-      level: state.level + 1,
+      level: newLevel,
       nextLevelXp: state.nextLevelXp + 500,
+      avatarType: newAvatar,
     };
     return;
   }
@@ -241,6 +253,11 @@ const actions: GameActions = {
       ...state,
       tasks: state.tasks.filter((task) => task.id !== id),
     };
+    emit();
+  },
+
+  setAvatarType: (type: AvatarType) => {
+    state = { ...state, avatarType: type };
     emit();
   },
 };

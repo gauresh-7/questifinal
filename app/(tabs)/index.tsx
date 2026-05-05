@@ -21,7 +21,7 @@ const BUTTON_SIZE = width * 0.24;
 
 export default function Index() {
   const router = useRouter();
-  const { user, currentXp, nextLevelXp, level, theme } = useGameStore();
+  const { user, currentXp, nextLevelXp, level, theme, avatarType } = useGameStore();
 
   const xpPercentage = nextLevelXp > 0 ? (currentXp / nextLevelXp) * 100 : 0;
   const isLight = theme === 'light';
@@ -117,7 +117,12 @@ export default function Index() {
               style={localStyles.glassAvatarWrapper}
             >
               <Image
-                source={require('../../assets/images/player_avatar.png')}
+                source={
+                  avatarType === 'WIZARD1' ? require('../../assets/images/wizard1.png') :
+                  avatarType === 'WIZARD2' ? require('../../assets/images/wizard2.png') :
+                  avatarType === 'WIZARD3' ? require('../../assets/images/wizard3.png') :
+                  require('../../assets/images/userIcon.png')
+                }
                 style={localStyles.avatarImage}
                 contentFit="cover"
               />
@@ -167,7 +172,7 @@ export default function Index() {
           <View style={localStyles.statsContainer}>
             {[
               { label: 'IDENTITY_TAG', value: `@${user.username.toLowerCase()}` },
-              { label: 'CLASS', value: 'Knight' }
+              { label: 'CLASS', value: avatarType.startsWith('WIZARD') ? 'WIZARD' : 'KNIGHT' }
             ].map((item, i) => (
               <MotiView
                 key={item.label}

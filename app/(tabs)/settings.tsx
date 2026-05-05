@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Switch, Pressable, Alert, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Switch, Pressable, Alert, TextInput, ScrollView } from 'react-native';
+import { Image } from 'expo-image';
 import { useGameStore } from '../../store';
+import type { AvatarType } from '../../store';
 import { auth } from '../../firebaseConfig';
 import { signOut } from 'firebase/auth';
 
 export default function Settings() {
-  const { user, theme, toggleTheme, logout, updateUsername } = useGameStore();
+  const { user, level, theme, toggleTheme, logout, updateUsername, avatarType, setAvatarType } = useGameStore();
   const [isEditingUsername, setIsEditingUsername] = useState(false);
   const [newName, setNewName] = useState(user?.username || '');
 
@@ -81,6 +83,39 @@ export default function Settings() {
               {isEditingUsername ? 'SAVE' : 'EDIT'}
             </Text>
           </Pressable>
+        </View>
+
+        <View style={[styles.settingRow, { marginTop: 16, flexDirection: 'column', alignItems: 'flex-start', paddingBottom: 24 }]}>
+          <Text style={[styles.settingLabel, { marginBottom: 16 }]}>CHAMPION_GALLERY</Text>
+          <View style={styles.avatarGrid}>
+            {(['WIZARD1', 'WIZARD2', 'WIZARD3', 'KNIGHT'] as AvatarType[]).map((a) => {
+              const source = 
+                a === 'WIZARD1' ? require('../../assets/images/wizard1.png') :
+                a === 'WIZARD2' ? require('../../assets/images/wizard2.png') :
+                a === 'WIZARD3' ? require('../../assets/images/wizard3.png') :
+                require('../../assets/images/userIcon.png');
+
+              return (
+                <Pressable
+                  key={a}
+                  onPress={() => setAvatarType(a)}
+                  style={({ pressed }) => [
+                    styles.avatarThumb,
+                    avatarType === a && styles.avatarThumbActive,
+                    pressed && { transform: [{ scale: 0.95 }] }
+                  ]}
+                >
+                  <Image source={source} style={styles.avatarThumbImage} />
+                  {avatarType === a && (
+                    <View style={styles.activeDot} />
+                  )}
+                </Pressable>
+              );
+            })}
+          </View>
+          <Text style={styles.galleryFooter}>
+            ALL FORMS UNLOCKED FOR PREVIEW
+          </Text>
         </View>
 
         <Pressable 
@@ -181,5 +216,51 @@ const getStyles = (theme: 'dark' | 'light') => {
       fontWeight: '900',
       letterSpacing: 1,
     },
+    avatarGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+      width: '100%',
+    },
+    avatarThumb: {
+      width: 60,
+      height: 60,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: 'transparent',
+      overflow: 'hidden',
+      backgroundColor: isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)',
+    },
+    avatarThumbActive: {
+      borderColor: isLight ? '#8000FF' : '#FF6500',
+    },
+    avatarThumbImage: {
+      width: '100%',
+      height: '100%',
+    },
+    lockOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    activeDot: {
+      position: 'absolute',
+      top: 4,
+      right: 4,
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: isLight ? '#8000FF' : '#FF6500',
+      borderWidth: 1,
+      borderColor: '#FFFFFF',
+    },
+    galleryFooter: {
+      marginTop: 16,
+      color: isLight ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.4)',
+      fontSize: 9,
+      fontWeight: '800',
+      letterSpacing: 1,
+    }
   });
 };

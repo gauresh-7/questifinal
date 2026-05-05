@@ -6,7 +6,7 @@ import { useGameStore } from "../../store";
 const { width, height } = Dimensions.get('window');
 
 const UserDetails = () => {
-    const { user, level, currentXp, nextLevelXp, theme } = useGameStore();
+    const { user, level, currentXp, nextLevelXp, theme, avatarType } = useGameStore();
 
     const isLight = theme === 'light';
     const styles = getStyles(theme);
@@ -30,10 +30,15 @@ const UserDetails = () => {
             <View style={styles.glassCard}>
                 <View style={styles.avatarInner}>
                     <Image 
-                      source={require('../../assets/images/player_avatar.png')} 
+                      source={
+                        avatarType === 'WIZARD1' ? require('../../assets/images/wizard1.png') :
+                        avatarType === 'WIZARD2' ? require('../../assets/images/wizard2.png') :
+                        avatarType === 'WIZARD3' ? require('../../assets/images/wizard3.png') :
+                        require('../../assets/images/userIcon.png')
+                      } 
                       style={styles.avatarImage} 
                       contentFit="cover"
-                      contentPosition="right"
+                      contentPosition="center"
                     />
                 </View>
             </View>
@@ -42,7 +47,7 @@ const UserDetails = () => {
             <View style={styles.detailsContainer}>
                 {[
                     { label: 'Name', value: user?.username.toUpperCase() || 'UNKNOWN' },
-                    { label: 'Class', value: 'Knight' },
+                    { label: 'Class', value: avatarType.startsWith('WIZARD') ? 'WIZARD' : 'KNIGHT' },
                     { label: 'Level', value: level.toString() },
                     { label: 'Next Ascension', value: `${nextLevelXp - currentXp} XP` },
                 ].map((item, index) => (
